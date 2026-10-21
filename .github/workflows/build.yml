@@ -7,7 +7,7 @@ on:
       tag:
         description: Release tag
         required: true
-        default: v7.3.0-bgm.2
+        default: v7.3.0-bgm.3
 permissions:
   contents: read
 jobs:
@@ -42,7 +42,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tools/vocal-engine/package_engine.py .engine-upstream publish/engine
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Real-model MP3 and cancellation integration tests
+      - name: Real-model MP3 AAC M4A and cancellation integration tests
         shell: pwsh
         run: |
           $env:BGM_TEST_ENGINE = (Resolve-Path publish/engine).Path
@@ -75,7 +75,7 @@ jobs:
     permissions:
       contents: write
     env:
-      RELEASE_TAG: ${{ inputs.tag || 'v7.3.0-bgm.2' }}
+      RELEASE_TAG: ${{ inputs.tag || 'v7.3.0-bgm.3' }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4

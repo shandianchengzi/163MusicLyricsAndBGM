@@ -13,6 +13,15 @@ public sealed class BundledEngineFactAttribute : FactAttribute
     }
 }
 
+public sealed class BundledEngineTheoryAttribute : TheoryAttribute
+{
+    public BundledEngineTheoryAttribute()
+    {
+        if (!OperatingSystem.IsWindows() || string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BGM_TEST_ENGINE")))
+            Skip = "Real-model integration test requires the packaged Windows engine.";
+    }
+}
+
 public class EmbeddedSeparationServiceTest
 {
     [Fact]
@@ -39,15 +48,18 @@ public class EmbeddedSeparationServiceTest
         finally { File.Delete(target); }
     }
 
-    [BundledEngineFact]
-    public async Task BundledEngineSeparatesRealMp3WithUnicodePathsAndNoExternalPython()
+    [BundledEngineTheory]
+    [InlineData(".mp3")]
+    [InlineData(".aac")]
+    [InlineData(".m4a")]
+    public async Task BundledEngineSeparatesAudioWithUnicodePathsAndNoExternalPython(string extension)
     {
         var engine = Environment.GetEnvironmentVariable("BGM_TEST_ENGINE")!;
         var directory = Path.Combine(Path.GetTempPath(), "伴奏集成测试 " + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
         try
         {
-            var source = Path.Combine(directory, "测试 歌曲.mp3");
+            var source = Path.Combine(directory, "测试 歌曲" + extension);
             var target = Path.Combine(directory, "测试 伴奏.wav");
             var start = new ProcessStartInfo(Path.Combine(engine, "ffmpeg.exe")) { UseShellExecute = false, CreateNoWindow = true };
             foreach (var argument in new[] { "-hide_banner", "-y", "-f", "lavfi", "-i", "sine=frequency=440:duration=3", "-ac", "2", source })

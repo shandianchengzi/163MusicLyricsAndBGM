@@ -4,16 +4,16 @@ Windows 发布包现已内置 vocal-separate 运行环境和 `2stems` 模型，�
 
 1. 从 [Releases](https://github.com/shandianchengzi/163MusicLyricsAndBGM/releases/latest) 下载 Windows ZIP，并**完整解压**（保留 `engine` 文件夹）。
 2. 运行 `MusicLyricApp.exe`，菜单打开 **伴奏提取**。
-3. 选择本地 MP3/WAV/FLAC，或先搜索歌曲，再选择“下载当前歌曲并提取伴奏”。
+3. 选择本地 MP3/WAV/FLAC/AAC/M4A，或先搜索歌曲，再选择“下载当前歌曲并提取伴奏”。
 4. 选择保存位置，等待生成 `歌曲名_伴奏.wav`。
 
 内置模式在本机处理，不启动网页、不占用服务端口、不在首次运行时下载模型。取消或关闭窗口会停止分离进程；程序退出时 Windows Job Object 会清理引擎及其子进程。仅打包 `2stems` 模型，未包含用不到的 4stems/5stems 模型。运行环境和模型较大，完整包远大于之前仅含界面的版本。
 
 歌曲下载复用搜索结果的直链，受歌曲权限、链接有效期和平台限制影响；下载失败时请导入本地音频。若直链只有试听片段，结果也仅包含该片段。
 
-高级选项可连接外部分离服务，适用于已有服务或其他系统；只有启用该选项时才会上传音频到所填服务地址。内置引擎目前提供 Windows x64 版。旧版 `archive-winform` 不包含此功能。
+高级选项可连接外部分离服务，适用于已有服务或其他系统；只有启用该选项时才会上传音频到所填服务地址。AAC/M4A 使用默认内置引擎；原版外部服务不接受这两种扩展名。内置引擎目前提供 Windows x64 版。旧版 `archive-winform` 不包含此功能。
 
-引擎来源、GPL-3.0 许可及本地适配源码见 `tools/vocal-engine/`；发布包同时提供上游源码附件。GitHub Actions 会实际调用打包后的引擎分离 MP3，并验证中文路径、输出 WAV 和取消清理后再发布。
+引擎来源、GPL-3.0 许可及本地适配源码见 `tools/vocal-engine/`；发布包同时提供上游源码附件。GitHub Actions 会实际调用打包后的引擎分离 MP3、AAC 和 M4A，并验证中文路径、输出 WAV 和取消清理后再发布。
 
 ---
 

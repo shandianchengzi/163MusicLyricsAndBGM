@@ -67,12 +67,16 @@ public sealed class AccompanimentWindow : Window
                 var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
                 {
                     Title = "选择要分离的音频", AllowMultiple = false,
-                    FileTypeFilter = new[] { new FilePickerFileType("音频") { Patterns = new[] { "*.mp3", "*.wav", "*.flac" } } }
+                    FileTypeFilter = new[] { new FilePickerFileType("音频") { Patterns = new[] { "*.mp3", "*.wav", "*.flac", "*.aac", "*.m4a" } } }
                 });
                 if (files.Count == 0) return;
                 source = files[0].TryGetLocalPath() ?? throw new InvalidOperationException("请选择本地音频文件。");
             }
             else source = "";
+            if (useExternal && !online &&
+                (string.Equals(Path.GetExtension(source), ".aac", StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(Path.GetExtension(source), ".m4a", StringComparison.OrdinalIgnoreCase)))
+                throw new InvalidOperationException("AAC/M4A 请使用内置分离引擎：取消勾选“连接外部分离服务”后重试。");
             var suggested = online ? _name : Path.GetFileNameWithoutExtension(source);
             foreach (var c in Path.GetInvalidFileNameChars()) suggested = suggested.Replace(c, '_');
             var save = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
