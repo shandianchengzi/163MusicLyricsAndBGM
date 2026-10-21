@@ -38,7 +38,7 @@ jobs:
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
           if ((Get-FileHash $archive -Algorithm SHA256).Hash.ToLower() -ne '2cbf46a0555183353292a7ddfd3d300b0cb845bc252a9505b0786fc201ca59f4') { throw 'Upstream engine checksum mismatch' }
-          & "$env:ProgramFiles/7-Zip/7z.exe" x $archive -o.engine-upstream -y | Out-Null
+          & "$env:ProgramFiles/7-Zip/7z.exe" x $archive "-o.engine-upstream" -y | Out-Null
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tools/vocal-engine/package_engine.py .engine-upstream publish/engine
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
