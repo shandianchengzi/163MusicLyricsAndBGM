@@ -1,4 +1,4 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
+<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:MusicLyricApp.ViewModels"
         x:Class="MusicLyricApp.Views.MainWindow"
@@ -32,6 +32,7 @@
             <MenuItem Header="项目主页" Command="{Binding ExecuteHomeCommand}" />
             <MenuItem Header="使用手册" Command="{Binding ExecuteWikiCommand}" />
             <MenuItem Header="问题反馈" Command="{Binding ExecuteIssueCommand}" />
+            <MenuItem Header="伴奏提取" Click="OpenAccompaniment_OnClick" />
             <MenuItem Header="格式转换" Command="{Binding ExecuteFormatConvertCommand}" />
             <MenuItem Header="更多设置" Command="{Binding ExecuteSettingCommand}" />
         </Menu>

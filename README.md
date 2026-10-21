@@ -1,3 +1,18 @@
+# 歌词与伴奏提取
+
+跨平台版本新增菜单 **伴奏提取**：
+
+1. 从 [vocal-separate Releases](https://github.com/jianchang512/vocal-separate/releases) 下载并解压，运行 `start.exe`；源码部署见该项目说明，需安装 ffmpeg 和 `2stems` 模型。
+2. 在本程序菜单打开“伴奏提取”，默认服务地址为 `http://127.0.0.1:9999`。
+3. 选择“导入音频并提取伴奏”（MP3/WAV/FLAC），或先搜索歌曲，再选择“下载当前歌曲并提取伴奏”。
+4. 选择保存位置，等待生成 `歌曲名_伴奏.wav`。
+
+歌曲下载复用搜索结果中的平台直链，受歌曲权限、链接有效期和平台限制影响；没有直链或下载失败时请导入本地音频。直链若仅提供试听片段，提取结果也仅包含该片段。不会绕过付费或登录限制。音频发送到填写的分离服务，默认在本机处理；模型和 Python 环境由 vocal-separate 提供，本程序不重复打包。取消会停止客户端请求，服务端已开始的计算可能继续运行。请避免同时在分离服务中运行其他任务。
+
+GitHub Actions 的 **Build and test** 构建提供 Windows x64 程序压缩包（Artifacts）。旧版 `archive-winform` 不包含此功能。
+
+---
+
 [![Release](https://img.shields.io/github/v/release/jitwxs/163MusicLyrics.svg)](https://github.com/jitwxs/163MusicLyrics/releases)
 ![Star](https://badgen.net/github/stars/jitwxs/163MusicLyrics)
 ![GitHub all releases](https://img.shields.io/github/downloads/jitwxs/163MusicLyrics/total)

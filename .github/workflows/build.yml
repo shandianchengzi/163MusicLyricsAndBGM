@@ -1,0 +1,21 @@
+name: Build and test
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - run: dotnet test cross-platform/MusicLyricApp.sln --configuration Release
+      - run: dotnet publish cross-platform/MusicLyricApp/MusicLyricApp.csproj -c Release -r win-x64 --self-contained true -o publish
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MusicLyricsAndBGM-win-x64
+          path: publish/

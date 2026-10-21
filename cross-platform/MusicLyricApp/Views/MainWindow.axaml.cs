@@ -130,6 +130,13 @@ public partial class MainWindow : Window, IWindowProvider
         }
     }
 
+    private async void OpenAccompaniment_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel vm)
+            await new AccompanimentWindow(vm.SearchResultViewModel.SongLink,
+                vm.SearchResultViewModel.SongName).ShowDialog(this);
+    }
+
     private void PlaybackSlider_OnTapped(object? sender, TappedEventArgs e)
     {
         if (DataContext is not MainWindowViewModel vm)
