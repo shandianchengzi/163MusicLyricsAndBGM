@@ -7,23 +7,67 @@ on:
       tag:
         description: Release tag
         required: true
-        default: v7.3.0-bgm.1
+        default: v7.3.0-bgm.2
 permissions:
   contents: read
 jobs:
   test:
     runs-on: windows-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
       - run: dotnet test cross-platform/MusicLyricApp.sln --configuration Release
       - run: dotnet publish cross-platform/MusicLyricApp/MusicLyricApp.csproj -c Release -r win-x64 --self-contained true -o publish
+      - uses: actions/cache@v4
+        with:
+          path: .engine-cache/vocal-separate-v0.0.4.7z
+          key: vocal-separate-v0.0.4-2cbf46a0555183353292a7ddfd3d300b0cb845bc252a9505b0786fc201ca59f4
+      - name: Bundle pinned vocal-separate runtime and 2stems model
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force .engine-cache | Out-Null
+          $archive = '.engine-cache/vocal-separate-v0.0.4.7z'
+          if (!(Test-Path $archive)) {
+            curl.exe --fail --location --retry 3 https://github.com/jianchang512/vocal-separate/releases/download/v0.0.4/vocal-separate-v0.0.4.7z -o $archive
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+          if ((Get-FileHash $archive -Algorithm SHA256).Hash.ToLower() -ne '2cbf46a0555183353292a7ddfd3d300b0cb845bc252a9505b0786fc201ca59f4') { throw 'Upstream engine checksum mismatch' }
+          & "$env:ProgramFiles/7-Zip/7z.exe" x $archive -o.engine-upstream -y | Out-Null
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/vocal-engine/package_engine.py .engine-upstream publish/engine
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Real-model MP3 and cancellation integration tests
+        shell: pwsh
+        run: |
+          $env:BGM_TEST_ENGINE = (Resolve-Path publish/engine).Path
+          $env:CUDA_VISIBLE_DEVICES = '-1'
+          dotnet test cross-platform/MusicLyricApp.Tests/MusicLyricApp.Tests.csproj -c Release --no-build --filter FullyQualifiedName~EmbeddedSeparationServiceTest --logger 'console;verbosity=normal'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Package complete Windows application and upstream source
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force release-assets | Out-Null
+          Push-Location publish
+          & "$env:ProgramFiles/7-Zip/7z.exe" a -tzip -mx=5 ../release-assets/MusicLyricsAndBGM-win-x64.zip ./* | Out-Null
+          $archiveExit = $LASTEXITCODE
+          Pop-Location
+          if ($archiveExit -ne 0) { exit $archiveExit }
+          curl.exe --fail --location --retry 3 https://github.com/jianchang512/vocal-separate/archive/5d11a4cff3b6eafcb41f92a0772301c0e1fe1465.zip -o release-assets/vocal-separate-v0.0.4-source.zip
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-ChildItem release-assets/*.zip | ForEach-Object {
+            "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower())  $($_.Name)"
+          } | Set-Content release-assets/SHA256SUMS.txt -Encoding ascii
       - uses: actions/upload-artifact@v4
         with:
           name: MusicLyricsAndBGM-win-x64
-          path: publish/
+          path: release-assets/
+          compression-level: 0
   release:
     needs: test
     if: github.ref == 'refs/heads/master' && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[release]')))
@@ -31,39 +75,18 @@ jobs:
     permissions:
       contents: write
     env:
-      RELEASE_TAG: ${{ inputs.tag || 'v7.3.0-bgm.1' }}
+      RELEASE_TAG: ${{ inputs.tag || 'v7.3.0-bgm.2' }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: MusicLyricsAndBGM-win-x64
-          path: publish
-      - name: Package Windows application
-        shell: pwsh
-        run: |
-          Compress-Archive -Path publish/* -DestinationPath MusicLyricsAndBGM-win-x64.zip
-          $hash = (Get-FileHash MusicLyricsAndBGM-win-x64.zip -Algorithm SHA256).Hash.ToLower()
-          "$hash  MusicLyricsAndBGM-win-x64.zip" | Set-Content SHA256SUMS.txt -Encoding ascii
+          path: release-assets
       - name: Publish release
         shell: pwsh
         env:
           RELEASE_COMMIT: ${{ github.sha }}
         run: |
-          @'
-          新增伴奏提取功能：
-          - 下载当前搜索歌曲后分离伴奏（需平台提供可用直链）。
-          - 导入本地 MP3、WAV、FLAC 后提取伴奏。
-          - 使用 vocal-separate 的 2stems 模型，保存 WAV 伴奏，支持取消。
-          
-          使用方法：
-          1. 下载 MusicLyricsAndBGM-win-x64.zip，完整解压后运行 MusicLyricApp.exe，无需另装 .NET。
-          2. 先安装并启动 https://github.com/jianchang512/vocal-separate 的 start.exe，确认 2stems 模型可用。
-          3. 在本程序菜单打开“伴奏提取”，默认连接 http://127.0.0.1:9999。
-          
-          本压缩包不包含 vocal-separate、Python 环境或分离模型，需要单独安装。
-          歌曲下载受平台权限及直链有效期限制；失败时请导入本地音频。
-          构建与 60 项自动测试通过；尚未实际运行模型验证分离音质。
-          '@ | Set-Content release-notes.md -Encoding utf8
-          gh release create "$env:RELEASE_TAG" MusicLyricsAndBGM-win-x64.zip SHA256SUMS.txt --target "$env:RELEASE_COMMIT" --title "歌词与伴奏提取 v7.3.0-bgm.1" --notes-file release-notes.md --latest
+          gh release create "$env:RELEASE_TAG" release-assets/MusicLyricsAndBGM-win-x64.zip release-assets/vocal-separate-v0.0.4-source.zip release-assets/SHA256SUMS.txt --target "$env:RELEASE_COMMIT" --title "歌词与伴奏提取 $env:RELEASE_TAG（内置引擎）" --notes-file docs/release-notes.md --latest
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
