@@ -14,8 +14,14 @@ sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        if (args.Length == 2 && args[0] == "--apply-update")
+        {
+            MusicLyricApp.Core.Service.UpdateInstaller.Run(args[1]);
+            return;
+        }
         try
         {
+            MusicLyricApp.Core.Service.InAppUpdateService.CleanupOldUpdates();
             LogManager.LoadConfiguration("NLog.config");
             Logger.Info("Application starting...");
             

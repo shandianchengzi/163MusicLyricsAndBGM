@@ -2,8 +2,20 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="MusicLyricApp.App"
              xmlns:local="using:MusicLyricApp"
-             RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+             RequestedThemeVariant="Dark">
+
+    <Application.Resources>
+        <SolidColorBrush x:Key="AppBackgroundBrush">#17191F</SolidColorBrush>
+        <SolidColorBrush x:Key="AppPanelBrush">#22262E</SolidColorBrush>
+        <SolidColorBrush x:Key="AppBorderBrush">#3A414D</SolidColorBrush>
+        <SolidColorBrush x:Key="AppTextBrush">#EDF0F5</SolidColorBrush>
+        <SolidColorBrush x:Key="AppSecondaryTextBrush">#B5BDCA</SolidColorBrush>
+        <SolidColorBrush x:Key="AppMutedTextBrush">#9AA6B8</SolidColorBrush>
+        <SolidColorBrush x:Key="AppHoverBrush">#2D3542</SolidColorBrush>
+        <SolidColorBrush x:Key="AppSelectedBrush">#334B70</SolidColorBrush>
+        <SolidColorBrush x:Key="AppSuccessBrush">#86D69B</SolidColorBrush>
+        <SolidColorBrush x:Key="AppErrorBrush">#FF9B9B</SolidColorBrush>
+    </Application.Resources>
 
     <Application.DataTemplates>
         <local:ViewLocator/>
@@ -11,6 +23,10 @@
   
     <Application.Styles>
         <FluentTheme />
+        <Style Selector="Window">
+            <Setter Property="Background" Value="{DynamicResource AppBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}" />
+        </Style>
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
     </Application.Styles>
 </Application>

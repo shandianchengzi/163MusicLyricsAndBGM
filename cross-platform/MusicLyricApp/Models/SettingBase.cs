@@ -61,7 +61,8 @@ public class ConfigBean
     /// </summary>
     public ChineseProcessRuleEnum ChineseProcessRule = ChineseProcessRuleEnum.IGNORE;
 
-    public ThemeModeEnum ThemeMode = ThemeModeEnum.FOLLOW_SYSTEM;
+    // Preserve the JSON key for old configurations while enforcing the sole supported palette.
+    public ThemeModeEnum ThemeMode => ThemeModeEnum.DARK;
     
     /// <summary>
     /// 多个歌手的分隔符

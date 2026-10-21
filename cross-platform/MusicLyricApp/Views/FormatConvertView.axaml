@@ -36,7 +36,7 @@
 
         <TextBlock Grid.Row="2"
                    VerticalAlignment="Center"
-                   Foreground="#667085"
+                   Foreground="{DynamicResource AppSecondaryTextBrush}"
                    Text="{Binding TipMessage}"
                    TextTrimming="CharacterEllipsis" />
     </Grid>

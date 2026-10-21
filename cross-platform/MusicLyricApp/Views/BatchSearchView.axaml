@@ -74,7 +74,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Error}"
-                                       Foreground="#B42318"
+                                       Foreground="{DynamicResource AppErrorBrush}"
                                        TextTrimming="CharacterEllipsis"
                                        ToolTip.Tip="{Binding Error}"
                                        VerticalAlignment="Center" />
@@ -91,22 +91,22 @@
             <Button Content="删除选中" Width="130" Command="{Binding ExecuteDeleteSelectedCommand}" />
         </StackPanel>
 
-        <Border Grid.Row="3" Padding="8" BorderBrush="#D0D7DE" BorderThickness="1" CornerRadius="6" Background="#FAFBFC">
+        <Border Grid.Row="3" Padding="8" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="6" Background="{DynamicResource AppPanelBrush}">
             <TextBlock TextTrimming="CharacterEllipsis">
-                <Run Text="【提示】 " Foreground="#344054" />
-                <Run Text="[" Foreground="#98A2B3" />
-                <Run Text="{Binding TipTimestamp}" Foreground="#98A2B3" />
-                <Run Text="] " Foreground="#98A2B3" />
-                <Run Text="{Binding TipNormalMessage}" Foreground="#667085" />
-                <Run Text="{Binding TipErrorMessage}" Foreground="IndianRed" />
-                <Run Text=" | 累计保存歌曲数量: " Foreground="#344054" />
-                <Run Text="{Binding TotalSongsCount}" Foreground="#344054" />
-                <Run Text=" | 存在歌词数量: " Foreground="#344054" />
-                <Run Text="{Binding SongsWithLyricsCount}" Foreground="#344054" />
-                <Run Text=" | 保存成功: " Foreground="#344054" />
-                <Run Text="{Binding SaveSuccessCount}" Foreground="#2E7D32" />
-                <Run Text=" | 保存失败: " Foreground="#344054" />
-                <Run Text="{Binding SaveFailedCount}" Foreground="IndianRed" />
+                <Run Text="【提示】 " Foreground="{DynamicResource AppTextBrush}" />
+                <Run Text="[" Foreground="{DynamicResource AppMutedTextBrush}" />
+                <Run Text="{Binding TipTimestamp}" Foreground="{DynamicResource AppMutedTextBrush}" />
+                <Run Text="] " Foreground="{DynamicResource AppMutedTextBrush}" />
+                <Run Text="{Binding TipNormalMessage}" Foreground="{DynamicResource AppSecondaryTextBrush}" />
+                <Run Text="{Binding TipErrorMessage}" Foreground="{DynamicResource AppErrorBrush}" />
+                <Run Text=" | 累计保存歌曲数量: " Foreground="{DynamicResource AppTextBrush}" />
+                <Run Text="{Binding TotalSongsCount}" Foreground="{DynamicResource AppTextBrush}" />
+                <Run Text=" | 存在歌词数量: " Foreground="{DynamicResource AppTextBrush}" />
+                <Run Text="{Binding SongsWithLyricsCount}" Foreground="{DynamicResource AppTextBrush}" />
+                <Run Text=" | 保存成功: " Foreground="{DynamicResource AppTextBrush}" />
+                <Run Text="{Binding SaveSuccessCount}" Foreground="{DynamicResource AppSuccessBrush}" />
+                <Run Text=" | 保存失败: " Foreground="{DynamicResource AppTextBrush}" />
+                <Run Text="{Binding SaveFailedCount}" Foreground="{DynamicResource AppErrorBrush}" />
             </TextBlock>
         </Border>
     </Grid>

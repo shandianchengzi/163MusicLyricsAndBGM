@@ -57,6 +57,7 @@ public sealed class AccompanimentWindow : Window
         _local.IsEnabled = _online.IsEnabled = _endpoint.IsEnabled = _external.IsEnabled = false;
         _cancel.IsEnabled = true;
         string? temporary = null;
+        string? completedPath = null;
         try
         {
             var useExternal = _external.IsChecked == true;
@@ -114,7 +115,7 @@ public sealed class AccompanimentWindow : Window
             {
                 await new EmbeddedSeparationService().SeparateAsync(source, destination, token);
             }
-            _status.Text = "伴奏已保存：" + destination;
+            completedPath = destination;
         }
         catch (OperationCanceledException) { _status.Text = "操作已取消或超时。内置分离进程已停止；外部服务的任务可能继续运行。"; }
         catch (Exception ex) { _status.Text = "提取失败：" + ex.Message + "\n请确保发布包已完整解压（含 engine 文件夹）；歌曲下载失败时可改用本地导入。"; }
@@ -126,5 +127,7 @@ public sealed class AccompanimentWindow : Window
             _online.IsEnabled = Uri.TryCreate(_link, UriKind.Absolute, out var uri) && (uri.Scheme == "http" || uri.Scheme == "https");
             _cancel.IsEnabled = false;
         }
+        // Only close after a successful save and cleanup; errors and cancellations remain visible.
+        if (completedPath != null) Close(completedPath);
     }
 }

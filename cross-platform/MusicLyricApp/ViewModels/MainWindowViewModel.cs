@@ -34,7 +34,7 @@ public partial class MainWindowViewModel : ViewModelBase
     
     public SignalLampViewModel LampVm { get; } = new();
 
-    [ObservableProperty] private string _appTitle = "MusicLyricApp v7.3";
+    [ObservableProperty] private string _appTitle = "MusicLyricApp " + UpdateCheckService.CurrentVersion;
 
     [ObservableProperty] private string _lastSaveFolderPath = "";
     [ObservableProperty] private string _tipTimestamp = "";
@@ -143,9 +143,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             _ = OpenSongDetailAsync(m.Value);
         });
-        
-        UpdateTheme();
-        
+
         if (_settingBean.Config.AutoCheckUpdate)
         {
             ThreadPool.QueueUserWorkItem(p => _ = DoVersionCheck(false));
@@ -671,7 +669,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         Process.Start(new ProcessStartInfo
         {
-            FileName = "https://github.com/jitwxs/163MusicLyrics",
+            FileName = UpdateCheckService.RepositoryUrl,
             UseShellExecute = true
         });
     }
@@ -702,25 +700,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _formatConvertWindow.Show();
     }
     
-    [RelayCommand]
-    private static void ExecuteWiki()
-    {
-        Process.Start(new ProcessStartInfo
-        {
-            FileName = "https://github.com/jitwxs/163MusicLyrics/wiki",
-            UseShellExecute = true
-        });
-    }
     
-    [RelayCommand]
-    private static void ExecuteIssue()
-    {
-        Process.Start(new ProcessStartInfo
-        {
-            FileName = "https://github.com/jitwxs/163MusicLyrics/issues",
-            UseShellExecute = true
-        });
-    }
 
     [RelayCommand]
     private async Task ExecuteShortCutAsync()
@@ -764,68 +744,28 @@ public partial class MainWindowViewModel : ViewModelBase
             if (_settingWindow.DataContext is SettingViewModel vm)
             {
                 vm.OnClosing();
-                UpdateTheme();
             }
             _settingWindow = null;
         };
         _settingWindow.Show();
     }
     
-    private bool _inCheckVersion;
-    
-    private bool _showMessageIfNotExistLatestVersion;
-    
+    [RelayCommand]
+    private void ExecuteCheckUpdate() => UpdateWindow.Open();
+
     private async Task DoVersionCheck(bool showMessageIfNotExistLatestVersion)
     {
-        _showMessageIfNotExistLatestVersion = showMessageIfNotExistLatestVersion;
-        
-        if (_inCheckVersion)
-        {
-            return;
-        }
-        
-        _inCheckVersion = true;
-        
         try
         {
-            var checkResult = _updateCheckService.CheckLatestVersion(AppTitle);
-            if (checkResult.HasUpdate)
-            {
-                var content = UpdateCheckService.BuildReleaseDescription(checkResult.Info);
-                
-                await Dispatcher.UIThread.InvokeAsync(async () =>
-                {
-                    var box = MessageBoxManager.GetMessageBoxStandard("更新说明", content, ButtonEnum.YesNo);
-                    var result = await box.ShowWindowAsync();
-    
-                    if (result == ButtonResult.Yes)
-                    {
-                        Process.Start(new ProcessStartInfo
-                        {
-                            FileName = UpdateCheckService.ReleasePageUrl,
-                            UseShellExecute = true
-                        });
-                    }
-                });
-            }
-            else if (_showMessageIfNotExistLatestVersion)
-            {
-                SetTip(ErrorMsgConst.THIS_IS_LATEST_VERSION, false);
-            }
+            var result = await _updateCheckService.CheckLatestVersionAsync();
+            if (result.HasUpdate || showMessageIfNotExistLatestVersion)
+                await Dispatcher.UIThread.InvokeAsync(() => UpdateWindow.Open(result));
         }
         catch (Exception ex)
         {
-            await DialogHelper.ShowMessage(ex);
+            if (showMessageIfNotExistLatestVersion)
+                await Dispatcher.UIThread.InvokeAsync(() => SetTip("检查更新失败：" + ex.Message, true));
         }
-        finally
-        {
-            _inCheckVersion = false;
-        }
-    }
-
-    private void UpdateTheme()
-    {
-        ((App)Application.Current!).SetTheme(SettingBean.Config.ThemeMode);
     }
 
     [RelayCommand]
@@ -845,6 +785,8 @@ public partial class MainWindowViewModel : ViewModelBase
             }
         }
     }
+
+    public void NotifyAccompanimentSaved(string path) => SetTip("伴奏已保存：" + path, false);
 
     private void SetTip(string message, bool isError)
     {

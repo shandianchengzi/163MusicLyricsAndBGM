@@ -68,6 +68,10 @@ public partial class MainWindow : Window, IWindowProvider
         }
     }
     
+    private bool _exitForUpdate;
+
+    public void PrepareForUpdateExit() => _exitForUpdate = true;
+
     protected override async void OnClosing(WindowClosingEventArgs e)
     {
         base.OnClosing(e);
@@ -77,7 +81,7 @@ public partial class MainWindow : Window, IWindowProvider
             return;
         }
 
-        if (!vm.SettingBean.Config.ConfirmBeforeExit)
+        if (_exitForUpdate || !vm.SettingBean.Config.ConfirmBeforeExit)
         {
             vm.SaveConfig();
             return;
@@ -133,8 +137,11 @@ public partial class MainWindow : Window, IWindowProvider
     private async void OpenAccompaniment_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is MainWindowViewModel vm)
-            await new AccompanimentWindow(vm.SearchResultViewModel.SongLink,
-                vm.SearchResultViewModel.SongName).ShowDialog(this);
+        {
+            var savedPath = await new AccompanimentWindow(vm.SearchResultViewModel.SongLink,
+                vm.SearchResultViewModel.SongName).ShowDialog<string?>(this);
+            if (!string.IsNullOrEmpty(savedPath)) vm.NotifyAccompanimentSaved(savedPath);
+        }
     }
 
     private void PlaybackSlider_OnTapped(object? sender, TappedEventArgs e)

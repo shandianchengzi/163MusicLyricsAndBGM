@@ -7,13 +7,15 @@ on:
       tag:
         description: Release tag
         required: true
-        default: v7.3.0-bgm.3
+        default: v7.3.0-bgm.4
 permissions:
   contents: read
 jobs:
   test:
     runs-on: windows-latest
     timeout-minutes: 30
+    env:
+      RELEASE_TAG: ${{ inputs.tag || 'v7.3.0-bgm.4' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -22,8 +24,23 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
+      - run: python -m unittest discover -s tools -p 'test_package_updates.py'
       - run: dotnet test cross-platform/MusicLyricApp.sln --configuration Release
+      - name: Upload dark theme UI captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: UI-dark-theme-screenshots
+          path: cross-platform/MusicLyricApp.Tests/bin/Release/net9.0/ui-screenshots/*.png
+          if-no-files-found: ignore
       - run: dotnet publish cross-platform/MusicLyricApp/MusicLyricApp.csproj -c Release -r win-x64 --self-contained true -o publish
+      - name: Build program-only and incremental update packages
+        shell: pwsh
+        run: |
+          curl.exe --fail --silent --location --retry 2 https://github.com/shandianchengzi/163MusicLyricsAndBGM/releases/latest/download/update-manifest.json -o .previous-update-manifest.json
+          if ($LASTEXITCODE -ne 0) { Remove-Item .previous-update-manifest.json -ErrorAction SilentlyContinue }
+          python tools/package_updates.py publish release-assets "$env:RELEASE_TAG" .previous-update-manifest.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/cache@v4
         with:
           path: .engine-cache/vocal-separate-v0.0.4.7z
@@ -60,7 +77,7 @@ jobs:
           if ($archiveExit -ne 0) { exit $archiveExit }
           curl.exe --fail --location --retry 3 https://github.com/jianchang512/vocal-separate/archive/5d11a4cff3b6eafcb41f92a0772301c0e1fe1465.zip -o release-assets/vocal-separate-v0.0.4-source.zip
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          Get-ChildItem release-assets/*.zip | ForEach-Object {
+          Get-ChildItem release-assets -File | ForEach-Object {
             "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower())  $($_.Name)"
           } | Set-Content release-assets/SHA256SUMS.txt -Encoding ascii
       - uses: actions/upload-artifact@v4
@@ -75,7 +92,7 @@ jobs:
     permissions:
       contents: write
     env:
-      RELEASE_TAG: ${{ inputs.tag || 'v7.3.0-bgm.3' }}
+      RELEASE_TAG: ${{ inputs.tag || 'v7.3.0-bgm.4' }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
@@ -88,5 +105,6 @@ jobs:
         env:
           RELEASE_COMMIT: ${{ github.sha }}
         run: |
-          gh release create "$env:RELEASE_TAG" release-assets/MusicLyricsAndBGM-win-x64.zip release-assets/vocal-separate-v0.0.4-source.zip release-assets/SHA256SUMS.txt --target "$env:RELEASE_COMMIT" --title "歌词与伴奏提取 $env:RELEASE_TAG（内置引擎）" --notes-file docs/release-notes.md --latest
+          $releaseFiles = Get-ChildItem release-assets -File | ForEach-Object { $_.FullName }
+          gh release create "$env:RELEASE_TAG" @releaseFiles --target "$env:RELEASE_COMMIT" --title "歌词与伴奏提取 $env:RELEASE_TAG（内置引擎）" --notes-file docs/release-notes.md --latest
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

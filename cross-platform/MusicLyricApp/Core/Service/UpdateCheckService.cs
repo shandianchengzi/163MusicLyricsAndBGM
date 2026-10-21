@@ -1,75 +1,55 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Net.Http;
 using System.Text.RegularExpressions;
-using MusicLyricApp.Core.Service.Music;
-using MusicLyricApp.Core.Utils;
+using System.Threading;
+using System.Threading.Tasks;
 using MusicLyricApp.Models;
+using Newtonsoft.Json;
 
 namespace MusicLyricApp.Core.Service;
 
 public partial class UpdateCheckService
 {
-    public const string ReleasePageUrl = "https://github.com/jitwxs/163MusicLyrics/releases";
+    public const string RepositoryUrl = "https://github.com/shandianchengzi/163MusicLyricsAndBGM";
+    public const string ReleasePageUrl = RepositoryUrl + "/releases/latest";
+    public const string LatestReleaseApi = "https://api.github.com/repos/shandianchengzi/163MusicLyricsAndBGM/releases/latest";
+    public const string BuildVersion = "v7.3.0-bgm.4";
 
-    public UpdateCheckResult CheckLatestVersion(string currentVersionText)
+    public static string CurrentVersion
     {
-        var info = HttpUtils.HttpGet<GitHubInfo>(
-            "https://api.github.com/repos/jitwxs/163MusicLyrics/releases/latest",
-            "application/json",
-            new Dictionary<string, string>
-            {
-                { "Accept", "application/vnd.github.v3+json" },
-                { "User-Agent", BaseNativeApi.Useragent }
-            });
-
-        if (info == null)
+        get
         {
-            throw new MusicLyricException(ErrorMsgConst.GET_LATEST_VERSION_FAILED);
+            var path = System.IO.Path.Combine(AppContext.BaseDirectory, "app-version.txt");
+            return System.IO.File.Exists(path) ? System.IO.File.ReadAllText(path).Trim() : BuildVersion;
         }
-
-        if (!string.IsNullOrWhiteSpace(info.Message) && info.Message.Contains("API rate limit"))
-        {
-            throw new MusicLyricException(ErrorMsgConst.API_RATE_LIMIT);
-        }
-
-        var currentVersion = ParseVersion(currentVersionText);
-        var latestVersion = ParseVersion(info.TagName);
-
-        var hasUpdate = latestVersion.Major > currentVersion.Major ||
-                        (latestVersion.Major == currentVersion.Major && latestVersion.Minor > currentVersion.Minor);
-
-        return new UpdateCheckResult(hasUpdate, info);
     }
 
-    public static string BuildReleaseDescription(GitHubInfo info)
+    public async Task<UpdateCheckResult> CheckLatestVersionAsync(CancellationToken token = default,
+        HttpClient? client = null, string? currentVersion = null)
     {
-        var sb = new StringBuilder();
-        sb
-            .Append($"Tag: {info.TagName}").Append('\t')
-            .Append($"UpdateTime: {info.PublishedAt.DateTime.AddHours(8)}").Append('\t')
-            .Append($"DownloadCount: {info.Assets[0].DownloadCount}").Append('\t')
-            .Append($"Author: {info.Author.Login}")
-            .Append(Environment.NewLine)
-            .Append(Environment.NewLine)
-            .Append(info.Body);
-        return sb.ToString();
+        using var owned = client == null ? NetworkClientFactory.CreateHttpClient(30) : null;
+        client ??= owned!;
+        using var request = new HttpRequestMessage(HttpMethod.Get, LatestReleaseApi);
+        request.Headers.UserAgent.ParseAdd("MusicLyricsAndBGM/" + CurrentVersion.TrimStart('v'));
+        request.Headers.Accept.ParseAdd("application/vnd.github+json");
+        using var response = await client.SendAsync(request, token);
+        response.EnsureSuccessStatusCode();
+        var info = JsonConvert.DeserializeObject<GitHubInfo>(await response.Content.ReadAsStringAsync(token))
+            ?? throw new InvalidOperationException("无法读取更新信息。");
+        return new UpdateCheckResult(!info.Draft && !info.Prerelease &&
+            ParseVersion(info.TagName) > ParseVersion(currentVersion ?? CurrentVersion), info);
     }
 
-    private static (int Major, int Minor) ParseVersion(string text)
+    public static Version ParseVersion(string? text)
     {
-        var match = VersionRegex().Match(text ?? string.Empty);
-        if (!match.Success)
-        {
-            return (0, 0);
-        }
-
-        return (int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value));
+        var match = VersionRegex().Match(text ?? "");
+        if (!match.Success) return new Version(0, 0, 0, 0);
+        int Part(int n) => int.TryParse(match.Groups[n].Value, out var value) ? value : 0;
+        return new Version(Part(1), Part(2), Part(3), Part(4));
     }
 
-    [GeneratedRegex(@"v(\d+)\.(\d+)")]
+    [GeneratedRegex(@"v?(\d+)\.(\d+)(?:\.(\d+))?(?:-bgm\.(\d+))?")]
     private static partial Regex VersionRegex();
 }
 
 public record UpdateCheckResult(bool HasUpdate, GitHubInfo Info);
-

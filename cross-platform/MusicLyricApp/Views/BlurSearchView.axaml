@@ -15,41 +15,41 @@
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
         <Style Selector="DataGrid">
-            <Setter Property="Background" Value="White" />
+            <Setter Property="Background" Value="{DynamicResource AppPanelBrush}" />
             <Setter Property="RowHeight" Value="34" />
             <Setter Property="GridLinesVisibility" Value="Horizontal" />
-            <Setter Property="BorderBrush" Value="#E1E4E8" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
         <Style Selector="DataGridColumnHeader">
-            <Setter Property="Background" Value="#F5F7FA" />
-            <Setter Property="Foreground" Value="#344054" />
+            <Setter Property="Background" Value="{DynamicResource AppHoverBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="BorderBrush" Value="#E1E4E8" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="0,0,0,1" />
             <Setter Property="Height" Value="36" />
         </Style>
         <Style Selector="DataGridRow">
-            <Setter Property="Background" Value="White" />
-            <Setter Property="BorderBrush" Value="#F0F2F5" />
+            <Setter Property="Background" Value="{DynamicResource AppPanelBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="0,0,0,1" />
         </Style>
         <Style Selector="DataGridRow:pointerover">
-            <Setter Property="Background" Value="#F8FAFC" />
+            <Setter Property="Background" Value="{DynamicResource AppHoverBrush}" />
         </Style>
         <Style Selector="DataGridRow:selected">
-            <Setter Property="Background" Value="#EEF2FF" />
+            <Setter Property="Background" Value="{DynamicResource AppSelectedBrush}" />
         </Style>
     </UserControl.Styles>
 
     <Grid RowDefinitions="Auto,Auto,*" Margin="12" RowSpacing="8">
-        <Border Background="#F8FAFC" CornerRadius="8" Padding="12">
+        <Border Background="{DynamicResource AppHoverBrush}" CornerRadius="8" Padding="12">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                 <StackPanel Spacing="4">
                     <TextBlock Text="模糊搜索结果" FontSize="16" FontWeight="SemiBold" />
                     <StackPanel Orientation="Horizontal" Spacing="12">
-                        <TextBlock Text="{Binding SearchResults.Count, StringFormat=共 {0} 条}" Foreground="#667085" />
-                        <TextBlock Text="{Binding SelectedItems.Count, StringFormat=已选 {0} 条}" Foreground="#667085" />
+                        <TextBlock Text="{Binding SearchResults.Count, StringFormat=共 {0} 条}" Foreground="{DynamicResource AppSecondaryTextBrush}" />
+                        <TextBlock Text="{Binding SelectedItems.Count, StringFormat=已选 {0} 条}" Foreground="{DynamicResource AppSecondaryTextBrush}" />
                     </StackPanel>
                 </StackPanel>
                 <Button Grid.Column="1"
@@ -59,11 +59,11 @@
             </Grid>
         </Border>
 
-        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="8" BorderBrush="#E1E4E8" BorderThickness="1">
-            <TextBlock Text="提示：可多选后下载，右键列表也可操作" Foreground="#667085" />
+        <Border Grid.Row="1" Background="{DynamicResource AppPanelBrush}" CornerRadius="8" Padding="8" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
+            <TextBlock Text="提示：可多选后下载，右键列表也可操作" Foreground="{DynamicResource AppSecondaryTextBrush}" />
         </Border>
 
-        <Border Grid.Row="2" Background="White" CornerRadius="8" BorderBrush="#E1E4E8" BorderThickness="1">
+        <Border Grid.Row="2" Background="{DynamicResource AppPanelBrush}" CornerRadius="8" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
             <DataGrid x:Name="BlurDataGrid"
                       ItemsSource="{Binding SearchResults}"
                       SelectionMode="Extended"

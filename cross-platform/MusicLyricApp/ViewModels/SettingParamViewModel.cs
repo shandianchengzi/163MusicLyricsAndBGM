@@ -156,22 +156,6 @@ public partial class SettingParamViewModel : ViewModelBase
         if (newValue != null) _settingBean.Config.ChineseProcessRule = newValue.Value;
     }
     
-    // 4. 主题
-    public ObservableCollection<EnumDisplayHelper.EnumDisplayItem<ThemeModeEnum>> ThemeModeRules { get; } =
-        EnumDisplayHelper.GetEnumDisplayCollection<ThemeModeEnum>();
-    
-    [ObservableProperty]
-    private EnumDisplayHelper.EnumDisplayItem<ThemeModeEnum> _selectedThemeModeRuleItem;
-
-    public ThemeModeEnum SelectedThemeModeRule => SelectedThemeModeRuleItem?.Value ?? default;
-    
-    partial void OnSelectedThemeModeRuleItemChanged(
-        EnumDisplayHelper.EnumDisplayItem<ThemeModeEnum>? oldValue,
-        EnumDisplayHelper.EnumDisplayItem<ThemeModeEnum>? newValue)
-    {
-        if (newValue != null) _settingBean.Config.ThemeMode = newValue.Value;
-    }
-    
     // 5. LRC 时间戳
     [ObservableProperty] private string _lrcTimestampFormat;
     
@@ -417,7 +401,6 @@ public partial class SettingParamViewModel : ViewModelBase
         SelectedDotTypeItem = DotTypes.First(item => Equals(item.Value, _settingBean.Config.DotType));
         SelectedTransLyricLostRuleItem = TransLyricLostRules.First(item => Equals(item.Value, _settingBean.Config.TransConfig.LostRule));
         SelectedChineseProcessRuleItem = ChineseProcessRules.First(item => Equals(item.Value, _settingBean.Config.ChineseProcessRule));
-        SelectedThemeModeRuleItem = ThemeModeRules.First(item => Equals(item.Value, _settingBean.Config.ThemeMode));
         LrcTimestampFormat = _settingBean.Config.LrcTimestampFormat;
         SrtTimestampFormat = _settingBean.Config.SrtTimestampFormat;
         IgnoreEmptyLyric = _settingBean.Config.IgnoreEmptyLyric;
